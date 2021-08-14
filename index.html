@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>livedoorお天気WebサービスからJSONデータを取得する</title>
+</head>
+
+<body>
+  <h1>livedoorお天気WebサービスからJSONデータを取得する</h1>
+  <div id="result">Getting weather...</div>
+
+  <script>
+    var result = null;
+    var data = null;
+
+    var httpObj = new XMLHttpRequest();
+    httpObj.open("POST", "https://viwy3zwne1.execute-api.us-east-1.amazonaws.com/dev", true);
+
+    httpObj.onload = function () {
+      data = JSON.parse(this.responseText);
+      showWeather(data);
+    }
+
+    httpObj.send();
+
+    function showWeather(data) {
+      var tag = "";
+      tag += "<h2>" + data.title + "の天気</h2>";
+
+      console.log(Object.keys(data));
+      console.log(data["errorMessage"]);
+      console.log(JSON.stringify(data));
+
+      result.innerHTML = tag;
+    }
+
+    window.onload = function () {
+      result = document.getElementById("result");
+    }
+  </script>
+</body>
+
+</html>
