@@ -1,43 +1,290 @@
-<!DOCTYPE html>
-
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <title>livedoorお天気WebサービスからJSONデータを取得する</title>
+  <meta charset="utf-8" />
+
+  <style>
+    html {
+      background-image: url("https://3.bp.blogspot.com/-Fym0qaZmJN0/U5hUXiuAh4I/AAAAAAAAhIU/oOV7Nw43S-s/s800/bg_pattern1_aozora.png");
+    }
+
+    body {
+      margin: 0px 10%;
+      padding: 0px;
+      background-color: rgba(255, 255, 255, 0.7);
+
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .center * {
+      margin-right: auto;
+      margin-left: auto;
+    }
+
+    .left {
+      float: left;
+      width: 50%;
+    }
+
+    .right {
+      float: right;
+      width: 50%;
+    }
+
+    #huku {
+      font-size: 32px;
+      font-weight: bold;
+      color: navy;
+    }
+
+    th,
+    td {
+      width: 150;
+      text-align: center;
+    }
+  </style>
 </head>
 
-<body>
-  <h1>livedoorお天気WebサービスからJSONデータを取得する</h1>
-  <div id="result">Getting weather...</div>
-
+<body class="center">
+  <h1 size="14"><b>天気対応服装ジェネレータ</b></h1>
+  <h1 id="title"></h1>
+  <div style="display: inline-block;">
+    <div class="left">
+      <img id="img2" style="width: 70%;">
+      <h2 id="telop"></h2>
+    </div>
+    <div class="right">
+      <table border="1" style="width: 150%;">
+        <thead>
+          <tr>
+            <th colspan="2">詳細情報</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="weather"></td>
+            <td>最高気温：<span id="maxtemp"></span>℃</td>
+          </tr>
+          <tr>
+            <td id="wind"></td>
+            <td>最低気温：<span id="mintemp"></span>℃</td>
+          </tr>
+          <tr>
+            <td id="wave"></td>
+            <td>降水確率：<span id="chanceOfRain"></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <marquee id="description" style="width: 70%;"></marquee>
+  <div style="float: none;"></div>
+  <img id="img1">
+  <div>
+    <div style="font-size: 26;">★本日おすすめの服装★</div>
+    ↑<span id="huku"></span>↑
+  </div>
+  <a href="https://weather.tsukumijima.net/">
+    <img src="https://weather.tsukumijima.net/logo.png" style="width: 50px;">天気予報 API（livedoor 天気互換）
+  </a>
   <script>
-    var result = null;
-    var data = null;
+    window.addEventListener("load", init);
 
-    var httpObj = new XMLHttpRequest();
-    httpObj.open("POST", "https://viwy3zwne1.execute-api.us-east-1.amazonaws.com/dev", true);
+    function init() {
+      var httpObj = new XMLHttpRequest();
+      httpObj.open("GET", "https://tsktjytoq8.execute-api.us-east-1.amazonaws.com/dev", true);
+      httpObj.onload = function () {
+        const data = JSON.parse(this.responseText);
+        if (data.statusCode == 200) {
+          draw(JSON.parse(data.body));
+        } else {
+          draw(getJsonOgj());
+        }
+      }
 
-    httpObj.onload = function () {
-      data = JSON.parse(this.responseText);
-      showWeather(data);
+      httpObj.send();
     }
 
-    httpObj.send();
+    function draw(data) {
+      const fc0 = data["forecasts"][0];
 
-    function showWeather(data) {
-      var tag = "";
-      tag += "<h2>" + data.title + "の天気</h2>";
-
-      console.log(Object.keys(data));
-      console.log(data["errorMessage"]);
-      console.log(JSON.stringify(data));
-
-      result.innerHTML = tag;
+      document.getElementById("title").textContent = data["title"];
+      document.getElementById("img1").src = data["Item"]["url"];
+      document.getElementById("img2").src = fc0["image"]["url"];
+      document.getElementById("telop").textContent = fc0["telop"];
+      document.getElementById("weather").textContent = fc0["detail"]["weather"];
+      document.getElementById("wind").textContent = fc0["detail"]["wind"];
+      document.getElementById("wave").textContent = fc0["detail"]["wave"];
+      document.getElementById("description").textContent = data["description"]["text"];
+      document.getElementById("chanceOfRain").textContent = fc0["chanceOfRain"][getHourStr()];
+      document.getElementById("maxtemp").textContent = fc0["temperature"]["max"]["celsius"];
+      document.getElementById("mintemp").textContent = convertNullToString(fc0["temperature"]["min"]["celsius"]);
+      document.getElementById("huku").textContent = data["Item"]["clothes"];
     }
 
-    window.onload = function () {
-      result = document.getElementById("result");
+    function getHourStr() {
+      const hours = new Date().getHours();
+      if (hours >= 18) {
+        return "T18_24";
+      } else if (hours >= 12) {
+        return "T12_18";
+      } else if (hours >= 6) {
+        return "T06_12";
+      } else if (hours >= 0) {
+        return "T00_06";
+      }
+      return "T18_24"
+    }
+
+    function convertNullToString(st) {
+      return st == null ? "--" : st;
+    }
+
+    function getJsonOgj() {
+      return {
+        "publicTime": "2021-03-03T05:00:00+09:00",
+        "publicTimeFormatted": "2021/03/03 05:00:00",
+        "publishingOffice": "福岡管区気象台",
+        "title": "福岡県 久留米 の天気",
+        "link": "https://www.jma.go.jp/bosai/forecast/#area_type=offices&area_code=400000",
+        "description": {
+          "publicTime": "2021-03-03T04:43:00+09:00",
+          "publicTimeFormatted": "2021/03/03 04:43:00",
+          "headlineText": "福岡、北九州地方では、３日夕方まで高波に注意してください。福岡県では、４日まで空気の乾燥した状態が続くため、火の取り扱いに注意してください。",
+          "bodyText": "　福岡県は、寒気の影響により曇りとなっている所がありますが、高気圧に覆われて概ね晴れています。\n\n　３日は、寒気の影響によりはじめ曇りとなる所がありますが、高気圧に覆われて概ね晴れとなるでしょう。\n\n　４日は、高気圧に覆われて晴れとなる所もありますが、気圧の谷や湿った空気の影響により概ね曇りで、夜遅くは雨となるでしょう。",
+          "text": "福岡、北九州地方では、３日夕方まで高波に注意してください。福岡県では、４日まで空気の乾燥した状態が続くため、火の取り扱いに注意してください。\n\n　福岡県は、寒気の影響により曇りとなっている所がありますが、高気圧に覆われて概ね晴れています。\n\n　３日は、寒気の影響によりはじめ曇りとなる所がありますが、高気圧に覆われて概ね晴れとなるでしょう。\n\n　４日は、高気圧に覆われて晴れとなる所もありますが、気圧の谷や湿った空気の影響により概ね曇りで、夜遅くは雨となるでしょう。"
+        },
+        "forecasts": [
+          {
+            "date": "2021-03-03",
+            "dateLabel": "今日",
+            "telop": "晴れ",
+            "detail": {
+              "weather": "晴れ",
+              "wind": "北の風",
+              "wave": "０．５メートル"
+            },
+            "temperature": {
+              "min": {
+                "celsius": "--",
+                "fahrenheit": null
+              },
+              "max": {
+                "celsius": "14",
+                "fahrenheit": "57.2"
+              }
+            },
+            "chanceOfRain": {
+              "T00_06": "--%",
+              "T06_12": "0%",
+              "T12_18": "0%",
+              "T18_24": "0%"
+            },
+            "image": {
+              "title": "晴れ",
+              "url": "https://www.jma.go.jp/bosai/forecast/img/100.svg",
+              "width": 80,
+              "height": 60
+            }
+          },
+          {
+            "date": "2021-03-04",
+            "dateLabel": "明日",
+            "telop": "曇のち一時雨",
+            "detail": {
+              "weather": "くもり　時々　晴れ　夜遅く　雨",
+              "wind": "北の風　後　北東の風",
+              "wave": "０．５メートル"
+            },
+            "temperature": {
+              "min": {
+                "celsius": "4",
+                "fahrenheit": "39.2"
+              },
+              "max": {
+                "celsius": "18",
+                "fahrenheit": "64.4"
+              }
+            },
+            "chanceOfRain": {
+              "T00_06": "10%",
+              "T06_12": "10%",
+              "T12_18": "20%",
+              "T18_24": "60%"
+            },
+            "image": {
+              "title": "曇のち一時雨",
+              "url": "https://www.jma.go.jp/bosai/forecast/img/212.svg",
+              "width": 80,
+              "height": 60
+            }
+          },
+          {
+            "date": "2021-03-05",
+            "dateLabel": "明後日",
+            "telop": "雨のち曇",
+            "detail": {
+              "weather": null,
+              "wind": null,
+              "wave": null
+            },
+            "temperature": {
+              "min": {
+                "celsius": "10",
+                "fahrenheit": "50"
+              },
+              "max": {
+                "celsius": "20",
+                "fahrenheit": "68"
+              }
+            },
+            "chanceOfRain": {
+              "T00_06": "70%",
+              "T06_12": "70%",
+              "T12_18": "70%",
+              "T18_24": "70%"
+            },
+            "image": {
+              "title": "雨のち曇",
+              "url": "https://www.jma.go.jp/bosai/forecast/img/313.svg",
+              "width": 80,
+              "height": 60
+            }
+          }
+        ],
+        "location": {
+          "area": "九州",
+          "prefecture": "福岡県",
+          "district": "筑後地方",
+          "city": "久留米"
+        },
+        "copyright": {
+          "title": "(C) 天気予報 API（livedoor 天気互換）",
+          "link": "https://weather.tsukumijima.net/",
+          "image": {
+            "title": "天気予報 API（livedoor 天気互換）",
+            "link": "https://weather.tsukumijima.net/",
+            "url": "https://weather.tsukumijima.net/logo.png",
+            "width": 120,
+            "height": 120
+          },
+          "provider": [
+            {
+              "link": "https://www.jma.go.jp/jma/",
+              "name": "気象庁 Japan Meteorological Agency",
+              "note": "気象庁 HP にて配信されている天気予報を JSON データへ編集しています。"
+            }
+          ]
+        },
+        Item: {
+          clothes: "服",
+          ID: "2",
+          url: "https://2.bp.blogspot.com/-6neMfztITPw/WZ0jZxbRi_I/AAAAAAABGIo/sLKtGZjPOA8HLzgzf9-2ifoY6msVKv1HQCLcBGAs/s450/keimusyo_syujin_syabougi_man_bouzu.png"
+        }
+      }
     }
   </script>
 </body>
